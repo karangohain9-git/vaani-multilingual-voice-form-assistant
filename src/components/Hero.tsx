@@ -76,10 +76,6 @@ export const Hero: React.FC<HeroProps> = ({
             <span className="font-bold text-indigo-700">
               Digital India & Citizen Accessibility Initiative
             </span>
-            <span className="text-slate-300">|</span>
-            <span className="text-slate-500 font-medium hidden sm:inline">
-              Hackathon Ready Edition
-            </span>
           </div>
         </div>
 
