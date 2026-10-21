@@ -41,13 +41,82 @@
   }
 
   /* Font Scaling Modes */
+  :root {
+    --font-scale: 1;
+  }
+
   body.font-size-large {
-    font-size: 1.125rem;
+    font-size: calc(1rem * 1.2);
   }
 
   body.font-size-xlarge {
-    font-size: 1.25rem;
+    font-size: calc(1rem * 1.4);
   }
+}
+
+/* Dynamic Text Scaling for All Elements (Headings, Paragraphs, Inputs, Modals, Buttons) */
+[data-font-size="large"],
+html.font-size-large,
+body.font-size-large {
+  --font-scale: 1.2;
+  --text-xs: calc(0.75rem * 1.2);
+  --text-sm: calc(0.875rem * 1.2);
+  --text-base: calc(1rem * 1.2);
+  --text-lg: calc(1.125rem * 1.2);
+  --text-xl: calc(1.25rem * 1.2);
+  --text-2xl: calc(1.5rem * 1.2);
+  --text-3xl: calc(1.875rem * 1.2);
+  --text-4xl: calc(2.25rem * 1.2);
+  --text-5xl: calc(3rem * 1.2);
+  --text-6xl: calc(3.75rem * 1.2);
+}
+
+[data-font-size="xlarge"],
+html.font-size-xlarge,
+body.font-size-xlarge {
+  --font-scale: 1.4;
+  --text-xs: calc(0.75rem * 1.4);
+  --text-sm: calc(0.875rem * 1.4);
+  --text-base: calc(1rem * 1.4);
+  --text-lg: calc(1.125rem * 1.4);
+  --text-xl: calc(1.25rem * 1.4);
+  --text-2xl: calc(1.5rem * 1.4);
+  --text-3xl: calc(1.875rem * 1.4);
+  --text-4xl: calc(2.25rem * 1.4);
+  --text-5xl: calc(3rem * 1.4);
+  --text-6xl: calc(3.75rem * 1.4);
+}
+
+/* Dynamic Arbitrary Text Size Scaling */
+[data-font-size="large"] .text-\[9px\],
+body.font-size-large .text-\[9px\] {
+  font-size: calc(9px * 1.2) !important;
+}
+[data-font-size="large"] .text-\[10px\],
+body.font-size-large .text-\[10px\] {
+  font-size: calc(10px * 1.2) !important;
+}
+[data-font-size="large"] .text-\[11px\],
+body.font-size-large .text-\[11px\] {
+  font-size: calc(11px * 1.2) !important;
+}
+
+[data-font-size="xlarge"] .text-\[9px\],
+body.font-size-xlarge .text-\[9px\] {
+  font-size: calc(9px * 1.4) !important;
+}
+[data-font-size="xlarge"] .text-\[10px\],
+body.font-size-xlarge .text-\[10px\] {
+  font-size: calc(10px * 1.4) !important;
+}
+[data-font-size="xlarge"] .text-\[11px\],
+body.font-size-xlarge .text-\[11px\] {
+  font-size: calc(11px * 1.4) !important;
+}
+
+/* Ensure smooth text transition across font-size changes */
+body, h1, h2, h3, h4, p, span, label, input, textarea, select, button {
+  transition: font-size 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Background Subtle Dot Grid */

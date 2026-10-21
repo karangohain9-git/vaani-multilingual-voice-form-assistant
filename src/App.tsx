@@ -78,7 +78,13 @@ export function App() {
   // User Settings & Accessibility
   const [voiceGuidanceEnabled, setVoiceGuidanceEnabled] = useState(true);
   const [highContrast, setHighContrast] = useState(false);
-  const [fontSizeMode, setFontSizeMode] = useState<'normal' | 'large' | 'xlarge'>('normal');
+  const [fontSizeMode, setFontSizeMode] = useState<'normal' | 'large' | 'xlarge'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('vaani_font_size');
+      if (saved === 'large' || saved === 'xlarge' || saved === 'normal') return saved;
+    }
+    return 'normal';
+  });
   const [userApiKey, setUserApiKey] = useState(() => {
     return typeof window !== 'undefined'
       ? localStorage.getItem('vaani_gemini_key') || ''
@@ -122,13 +128,30 @@ export function App() {
     }
   }, [highContrast]);
 
-  // Sync Font Size class on body
+  // Sync Font Size class on root and body
   useEffect(() => {
-    document.body.classList.remove('font-size-large', 'font-size-xlarge');
+    const root = document.documentElement;
+    const body = document.body;
+
+    root.classList.remove('font-size-normal', 'font-size-large', 'font-size-xlarge');
+    body.classList.remove('font-size-normal', 'font-size-large', 'font-size-xlarge');
+
+    root.setAttribute('data-font-size', fontSizeMode);
+    body.setAttribute('data-font-size', fontSizeMode);
+
     if (fontSizeMode === 'large') {
-      document.body.classList.add('font-size-large');
+      root.classList.add('font-size-large');
+      body.classList.add('font-size-large');
     } else if (fontSizeMode === 'xlarge') {
-      document.body.classList.add('font-size-xlarge');
+      root.classList.add('font-size-xlarge');
+      body.classList.add('font-size-xlarge');
+    } else {
+      root.classList.add('font-size-normal');
+      body.classList.add('font-size-normal');
+    }
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vaani_font_size', fontSizeMode);
     }
   }, [fontSizeMode]);
 
