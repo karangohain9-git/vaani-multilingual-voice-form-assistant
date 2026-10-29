@@ -98,6 +98,20 @@ All 19 automated tests for validation, phone normalization, state preservation, 
 npm run build
 ```
 
+### 6. Deploy to Vercel
+Vaani is configured out of the box for zero-config Vercel deployment:
+- **Framework Preset**: Vite
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Serverless API Routes**: `/api/extract` and `/api/submit` (handled via Vercel Functions in `api/`)
+
+#### Production Environment Variables for Vercel:
+Configure these in **Vercel Project Settings -> Environment Variables**:
+- `GEMINI_API_KEY`: Your Google Gemini API Key (Server-side extraction).
+- `VITE_SUPABASE_URL`: Your Supabase Project URL (`https://your-project.supabase.co`).
+- `VITE_SUPABASE_ANON_KEY`: Your Supabase Anonymous Public Key.
+- `SUPABASE_SERVICE_ROLE_KEY`: (Optional, Server-side only) Supabase service role key for direct backend table inserts.
+
 ---
 
 ## 5. Supabase Database Setup & Row Level Security

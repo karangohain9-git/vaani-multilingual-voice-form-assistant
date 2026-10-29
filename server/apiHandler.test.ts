@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { heuristicExtract, handleSubmit } from './apiHandler';
+import { heuristicExtract, handleSubmit } from './apiHandler.ts';
 
 describe('Server API Handler Tests', () => {
   const sampleFields = [
