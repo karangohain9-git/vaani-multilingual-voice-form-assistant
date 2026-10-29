@@ -1,5 +1,5 @@
 import React from 'react';
-import { Volume2, VolumeX, Sparkles, HelpCircle, Settings, Contrast, Type } from 'lucide-react';
+import { Volume2, VolumeX, Sparkles, HelpCircle, Settings, Sun, Moon, Type } from 'lucide-react';
 import type { Language } from '../types';
 import { SUPPORTED_LANGUAGES } from '../types';
 import { soundFx } from '../services/soundFx';
@@ -9,8 +9,8 @@ interface NavbarProps {
   onLanguageChange: (lang: Language) => void;
   voiceGuidanceEnabled: boolean;
   onToggleVoiceGuidance: () => void;
-  highContrast: boolean;
-  onToggleHighContrast: () => void;
+  darkMode: boolean;
+  onToggleDarkMode: () => void;
   fontSizeMode: 'normal' | 'large' | 'xlarge';
   onCycleFontSize: () => void;
   onOpenHowItWorks: () => void;
@@ -23,8 +23,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLanguageChange,
   voiceGuidanceEnabled,
   onToggleVoiceGuidance,
-  highContrast,
-  onToggleHighContrast,
+  darkMode,
+  onToggleDarkMode,
   fontSizeMode,
   onCycleFontSize,
   onOpenHowItWorks,
@@ -134,21 +134,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </button>
 
-            {/* High Contrast Toggle Button */}
+            {/* Dark Mode Toggle Button */}
             <button
               onClick={() => {
                 soundFx.playClick();
-                onToggleHighContrast();
+                onToggleDarkMode();
               }}
-              title={highContrast ? 'Disable High Contrast' : 'Enable High Contrast'}
-              aria-label="Toggle High Contrast Mode"
-              className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
-                highContrast
-                  ? 'bg-black text-white border-black ring-2 ring-amber-400'
+              title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
+                darkMode
+                  ? 'bg-indigo-950/80 text-amber-300 border-indigo-700/60 hover:bg-indigo-900 hover:text-amber-200 shadow-xs ring-1 ring-indigo-500/30'
                   : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
               }`}
             >
-              <Contrast className="w-4 h-4" />
+              {darkMode ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-700" />
+              )}
             </button>
 
             {/* How It Works Modal Trigger */}

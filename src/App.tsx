@@ -77,7 +77,15 @@ export function App() {
 
   // User Settings & Accessibility
   const [voiceGuidanceEnabled, setVoiceGuidanceEnabled] = useState(true);
-  const [highContrast, setHighContrast] = useState(false);
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('vaani_theme');
+      if (saved === 'dark') return true;
+      if (saved === 'light') return false;
+      return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+    return false;
+  });
   const [fontSizeMode, setFontSizeMode] = useState<'normal' | 'large' | 'xlarge'>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('vaani_font_size');
@@ -121,12 +129,27 @@ export function App() {
 
   // Sync High Contrast class on body
   useEffect(() => {
-    if (highContrast) {
-      document.body.classList.add('high-contrast');
+    const root = document.documentElement;
+    const body = document.body;
+
+    if (darkMode) {
+      root.classList.add('dark');
+      body.classList.add('dark');
+      root.setAttribute('data-theme', 'dark');
+      body.setAttribute('data-theme', 'dark');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('vaani_theme', 'dark');
+      }
     } else {
-      document.body.classList.remove('high-contrast');
+      root.classList.remove('dark');
+      body.classList.remove('dark');
+      root.setAttribute('data-theme', 'light');
+      body.setAttribute('data-theme', 'light');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('vaani_theme', 'light');
+      }
     }
-  }, [highContrast]);
+  }, [darkMode]);
 
   // Sync Font Size class on root and body
   useEffect(() => {
@@ -406,8 +429,8 @@ export function App() {
         onLanguageChange={setCurrentLanguage}
         voiceGuidanceEnabled={voiceGuidanceEnabled}
         onToggleVoiceGuidance={() => setVoiceGuidanceEnabled((v) => !v)}
-        highContrast={highContrast}
-        onToggleHighContrast={() => setHighContrast((c) => !c)}
+        darkMode={darkMode}
+        onToggleDarkMode={() => setDarkMode((d) => !d)}
         fontSizeMode={fontSizeMode}
         onCycleFontSize={handleCycleFontSize}
         onOpenHowItWorks={() => setIsHowItWorksOpen(true)}
