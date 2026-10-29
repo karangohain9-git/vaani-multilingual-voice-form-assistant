@@ -15,6 +15,7 @@ import { initializeFieldStates, mergeExtractedFields } from './utils/formMapping
 import { validateForm } from './utils/validation';
 import { aiService } from './services/aiExtraction';
 import { voiceAssistant } from './services/speechSynthesis';
+import { speechService } from './services/speechRecognition';
 import { soundFx } from './services/soundFx';
 import {
   FileText,
@@ -60,6 +61,7 @@ export function App() {
     message: string;
     model: string;
     isFallback: boolean;
+    isError?: boolean;
   } | null>(null);
 
   // Validation State
@@ -82,9 +84,9 @@ export function App() {
       const saved = localStorage.getItem('vaani_theme');
       if (saved === 'dark') return true;
       if (saved === 'light') return false;
-      return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      return true;
     }
-    return false;
+    return true;
   });
   const [fontSizeMode, setFontSizeMode] = useState<'normal' | 'large' | 'xlarge'>(() => {
     if (typeof window !== 'undefined') {
@@ -127,7 +129,12 @@ export function App() {
     soundFx.setMuted(!voiceGuidanceEnabled);
   }, [voiceGuidanceEnabled]);
 
-  // Sync High Contrast class on body
+  // Sync Speech Recognition language and reset in-flight recognition on global language change
+  useEffect(() => {
+    speechService.setLanguage(currentLanguage);
+  }, [currentLanguage]);
+
+  // Sync Dark Mode theme class & attribute on root and body, and persist in localStorage
   useEffect(() => {
     const root = document.documentElement;
     const body = document.body;
@@ -238,7 +245,7 @@ export function App() {
         userApiKey: userApiKey || undefined,
       });
 
-      if (result.success && result.extracted) {
+      if (result.success && result.extracted && Object.keys(result.extracted).length > 0) {
         soundFx.playAiSuccess();
         const { updatedStates, fieldsUpdatedCount, preservedManualCount } = mergeExtractedFields(
           fieldStates,
@@ -260,6 +267,7 @@ export function App() {
           message: noticeMsg,
           model: result.model_used,
           isFallback: Boolean(result.is_fallback),
+          isError: false,
         });
 
         // Spoken audio feedback
@@ -275,15 +283,17 @@ export function App() {
       } else {
         setAiNotice({
           message: result.error || 'Could not extract information from speech transcript.',
-          model: result.model_used,
-          isFallback: true,
+          model: result.model_used || 'Notice',
+          isFallback: false,
+          isError: true,
         });
       }
     } catch (err: any) {
       setAiNotice({
         message: err?.message || 'Error occurred during AI processing.',
         model: 'Error',
-        isFallback: true,
+        isFallback: false,
+        isError: true,
       });
     } finally {
       setIsProcessingAi(false);
@@ -422,7 +432,7 @@ export function App() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased selection:bg-indigo-600 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[var(--bg-main)] text-[var(--text-primary)] antialiased selection:bg-[var(--accent-primary)] selection:text-white transition-colors duration-200">
       {/* Accessible Global Navbar */}
       <Navbar
         currentLanguage={currentLanguage}
@@ -456,55 +466,55 @@ export function App() {
         {view === 'form' && (
           <div ref={formTopRef} className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             {/* 4-Step Pipeline Header */}
-            <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 mb-8">
+            <div className="bg-[var(--surface-card)] rounded-3xl p-5 sm:p-6 shadow-sm border border-[var(--border-subtle)] mb-8 transition-colors duration-200">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-500">
+                <span className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
                   Form Automation Progress
                 </span>
-                <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">
+                <span className="text-xs font-bold text-[var(--accent-primary)] bg-[#8B5CF6]/15 px-2.5 py-1 rounded-full border border-[#8B5CF6]/30">
                   {formCompletionPercent}% Complete ({filledCount}/{currentFormDef.fields.length} fields)
                 </span>
               </div>
 
               {/* Progress track */}
-              <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden mb-6">
+              <div className="w-full bg-[var(--surface-secondary)] rounded-full h-2.5 overflow-hidden mb-6">
                 <div
-                  className="bg-gradient-to-r from-indigo-600 to-violet-600 h-2.5 rounded-full transition-all duration-500"
+                  className="bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] h-2.5 rounded-full transition-all duration-500"
                   style={{ width: `${formCompletionPercent}%` }}
                 />
               </div>
 
               {/* Step Badges */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                <div className={`p-3 rounded-2xl border flex items-center gap-2.5 ${transcript ? 'bg-indigo-50/80 border-indigo-200 text-indigo-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
-                  <Mic className="w-4 h-4 text-indigo-600 shrink-0" />
+                <div className={`p-3 rounded-2xl border flex items-center gap-2.5 ${transcript ? 'bg-[#8B5CF6]/15 border-[#8B5CF6]/40 text-[var(--text-primary)] font-bold' : 'bg-[var(--surface-secondary)] border-[var(--border-subtle)] text-[var(--text-secondary)]'}`}>
+                  <Mic className={`w-4 h-4 shrink-0 ${transcript ? 'text-[var(--accent-primary)]' : 'text-[var(--text-secondary)]'}`} />
                   <div>
                     <span className="block font-black">1. Voice Audio</span>
-                    <span className="text-[10px] text-slate-500">{transcript ? 'Captured' : 'Pending'}</span>
+                    <span className="text-[10px] text-[var(--text-secondary)]">{transcript ? 'Captured' : 'Pending'}</span>
                   </div>
                 </div>
 
-                <div className={`p-3 rounded-2xl border flex items-center gap-2.5 ${filledCount > 0 ? 'bg-indigo-50/80 border-indigo-200 text-indigo-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
-                  <Cpu className="w-4 h-4 text-violet-600 shrink-0" />
+                <div className={`p-3 rounded-2xl border flex items-center gap-2.5 ${filledCount > 0 ? 'bg-[#8B5CF6]/15 border-[#8B5CF6]/40 text-[var(--text-primary)] font-bold' : 'bg-[var(--surface-secondary)] border-[var(--border-subtle)] text-[var(--text-secondary)]'}`}>
+                  <Cpu className={`w-4 h-4 shrink-0 ${filledCount > 0 ? 'text-[var(--accent-secondary)]' : 'text-[var(--text-secondary)]'}`} />
                   <div>
                     <span className="block font-black">2. Gemini AI</span>
-                    <span className="text-[10px] text-slate-500">{filledCount > 0 ? `${filledCount} Mapped` : 'Awaiting'}</span>
+                    <span className="text-[10px] text-[var(--text-secondary)]">{filledCount > 0 ? `${filledCount} Mapped` : 'Awaiting'}</span>
                   </div>
                 </div>
 
-                <div className={`p-3 rounded-2xl border flex items-center gap-2.5 ${missingFields.length === 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-900 font-bold' : 'bg-amber-50 border-amber-200 text-amber-900 font-bold'}`}>
-                  <CheckCircle2 className={`w-4 h-4 shrink-0 ${missingFields.length === 0 ? 'text-emerald-600' : 'text-amber-600'}`} />
+                <div className={`p-3 rounded-2xl border flex items-center gap-2.5 ${missingFields.length === 0 ? 'bg-[#059669]/15 border-[#059669]/40 text-[var(--state-success)] font-bold' : 'bg-[#B45309]/15 border-[#B45309]/40 text-[var(--state-warning)] font-bold'}`}>
+                  <CheckCircle2 className={`w-4 h-4 shrink-0 ${missingFields.length === 0 ? 'text-[var(--state-success)]' : 'text-[var(--state-warning)]'}`} />
                   <div>
                     <span className="block font-black">3. Missing Check</span>
                     <span className="text-[10px]">{missingFields.length === 0 ? 'All Completed' : `${missingFields.length} Missing`}</span>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-2xl border bg-slate-50 border-slate-200 text-slate-600 flex items-center gap-2.5">
-                  <ShieldCheck className="w-4 h-4 text-slate-500 shrink-0" />
+                <div className="p-3 rounded-2xl border bg-[var(--surface-secondary)] border-[var(--border-subtle)] text-[var(--text-secondary)] flex items-center gap-2.5">
+                  <ShieldCheck className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />
                   <div>
                     <span className="block font-black">4. Final Save</span>
-                    <span className="text-[10px] text-slate-500">PostgreSQL</span>
+                    <span className="text-[10px] text-[var(--text-secondary)]">PostgreSQL</span>
                   </div>
                 </div>
               </div>
@@ -513,10 +523,10 @@ export function App() {
             {/* Interactive Form Switcher (3 Application Scheme Cards) */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-500">
+                <span className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
                   Select Application Scheme
                 </span>
-                <span className="text-xs text-indigo-700 font-semibold">
+                <span className="text-xs text-[var(--accent-primary)] font-semibold">
                   3 Schemas Available
                 </span>
               </div>
@@ -531,24 +541,24 @@ export function App() {
                   }}
                   className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                     selectedFormId === 'citizen_welfare'
-                      ? 'bg-white border-indigo-600 ring-2 ring-indigo-500/20 shadow-md card-glow-indigo'
-                      : 'bg-white/80 hover:bg-white border-slate-200'
+                      ? 'bg-[var(--surface-secondary)] border-2 border-[var(--accent-primary)] shadow-sm'
+                      : 'bg-[var(--surface-card)] hover:bg-[var(--surface-secondary)] border-[var(--border-subtle)]'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+                    <div className="w-8 h-8 rounded-xl bg-[#8B5CF6]/15 text-[var(--accent-primary)] flex items-center justify-center font-bold">
                       <Award className="w-4 h-4" />
                     </div>
                     {selectedFormId === 'citizen_welfare' && (
-                      <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-600 text-white px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-[var(--accent-primary)] text-white px-2 py-0.5 rounded-full">
                         Active
                       </span>
                     )}
                   </div>
-                  <h3 className="font-black text-sm text-slate-900 leading-snug">
+                  <h3 className="font-black text-sm text-[var(--text-primary)] leading-snug">
                     Citizen Welfare Scheme
                   </h3>
-                  <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                  <p className="text-[11px] text-[var(--text-secondary)] mt-1 line-clamp-2">
                     Ration support, financial assistance, and rural housing grant.
                   </p>
                 </button>
@@ -562,24 +572,24 @@ export function App() {
                   }}
                   className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                     selectedFormId === 'student_scholarship'
-                      ? 'bg-white border-indigo-600 ring-2 ring-indigo-500/20 shadow-md card-glow-indigo'
-                      : 'bg-white/80 hover:bg-white border-slate-200'
+                      ? 'bg-[var(--surface-secondary)] border-2 border-[var(--accent-primary)] shadow-sm'
+                      : 'bg-[var(--surface-card)] hover:bg-[var(--surface-secondary)] border-[var(--border-subtle)]'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <div className="w-8 h-8 rounded-xl bg-violet-50 text-violet-700 flex items-center justify-center font-bold">
+                    <div className="w-8 h-8 rounded-xl bg-[#0891B2]/15 text-[var(--accent-secondary)] flex items-center justify-center font-bold">
                       <GraduationCap className="w-4 h-4" />
                     </div>
                     {selectedFormId === 'student_scholarship' && (
-                      <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-600 text-white px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-[var(--accent-primary)] text-white px-2 py-0.5 rounded-full">
                         Active
                       </span>
                     )}
                   </div>
-                  <h3 className="font-black text-sm text-slate-900 leading-snug">
+                  <h3 className="font-black text-sm text-[var(--text-primary)] leading-snug">
                     Student Scholarship
                   </h3>
-                  <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                  <p className="text-[11px] text-[var(--text-secondary)] mt-1 line-clamp-2">
                     Higher education tuition, vocational grants, and study books.
                   </p>
                 </button>
@@ -593,24 +603,24 @@ export function App() {
                   }}
                   className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                     selectedFormId === 'universal_service'
-                      ? 'bg-white border-indigo-600 ring-2 ring-indigo-500/20 shadow-md card-glow-indigo'
-                      : 'bg-white/80 hover:bg-white border-slate-200'
+                      ? 'bg-[var(--surface-secondary)] border-2 border-[var(--accent-primary)] shadow-sm'
+                      : 'bg-[var(--surface-card)] hover:bg-[var(--surface-secondary)] border-[var(--border-subtle)]'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                    <div className="w-8 h-8 rounded-xl bg-[#059669]/15 text-[var(--state-success)] flex items-center justify-center font-bold">
                       <Building2 className="w-4 h-4" />
                     </div>
                     {selectedFormId === 'universal_service' && (
-                      <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-600 text-white px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-[var(--accent-primary)] text-white px-2 py-0.5 rounded-full">
                         Active
                       </span>
                     )}
                   </div>
-                  <h3 className="font-black text-sm text-slate-900 leading-snug">
+                  <h3 className="font-black text-sm text-[var(--text-primary)] leading-snug">
                     Universal Civic Grievance
                   </h3>
-                  <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                  <p className="text-[11px] text-[var(--text-secondary)] mt-1 line-clamp-2">
                     Municipal utilities, water, electricity, and civic requests.
                   </p>
                 </button>
@@ -634,24 +644,30 @@ export function App() {
             {aiNotice && (
               <div
                 className={`p-4 sm:p-5 rounded-3xl border mb-8 flex items-start gap-3.5 text-xs sm:text-sm shadow-md transition-all ${
-                  aiNotice.isFallback
-                    ? 'bg-gradient-to-r from-amber-50 to-orange-50/50 border-amber-300 text-amber-950'
-                    : 'bg-gradient-to-r from-indigo-50 to-purple-50/50 border-indigo-200 text-indigo-950'
+                  aiNotice.isError
+                    ? 'bg-[var(--bg-error-card)] border-[var(--border-error)] text-[var(--state-error)]'
+                    : aiNotice.isFallback
+                    ? 'bg-[var(--surface-card)] border-[var(--state-warning)]/40 text-[var(--text-primary)]'
+                    : 'bg-[var(--surface-card)] border-[var(--accent-primary)]/40 text-[var(--text-primary)]'
                 }`}
               >
-                <div className="p-2 rounded-xl bg-white shadow-xs shrink-0 mt-0.5">
-                  <Sparkles className="w-4 h-4 text-indigo-600" />
+                <div className="p-2 rounded-xl bg-[var(--surface-secondary)] shadow-xs shrink-0 mt-0.5">
+                  <Sparkles className="w-4 h-4 text-[var(--accent-primary)]" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <strong className="font-bold text-sm">
-                      {aiNotice.isFallback ? 'Local Fallback Extractor Output:' : 'Google Gemini 1.5 Flash Output:'}
+                    <strong className="font-bold text-sm text-[var(--text-primary)]">
+                      {aiNotice.isError
+                        ? 'Extraction Notice:'
+                        : aiNotice.isFallback
+                        ? 'Local Fallback Extractor Output:'
+                        : 'Google Gemini 1.5 Flash Output:'}
                     </strong>
-                    <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-white border border-slate-200/80 shadow-2xs">
+                    <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[var(--surface-secondary)] border border-[var(--border-subtle)] text-[var(--accent-primary)] shadow-2xs">
                       {aiNotice.model}
                     </span>
                   </div>
-                  <p className="mt-1.5 leading-relaxed">{aiNotice.message}</p>
+                  <p className="mt-1.5 leading-relaxed text-[var(--text-secondary)]">{aiNotice.message}</p>
                 </div>
               </div>
             )}
@@ -668,21 +684,21 @@ export function App() {
             </div>
 
             {/* STEP 3: Auto-Mapped Form Fields Section */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5 mb-6">
+            <div className="bg-[var(--surface-card)] rounded-3xl p-6 sm:p-8 shadow-sm border border-[var(--border-subtle)] transition-colors duration-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-subtle)] pb-5 mb-6">
                 <div>
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                    <div className="w-8 h-8 rounded-xl bg-[var(--accent-primary)] text-white flex items-center justify-center font-bold text-sm shadow-xs">
                       2
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                    <h2 className="text-xl sm:text-2xl font-black text-[var(--text-primary)] tracking-tight">
                       Review & Correct Form Fields
                     </h2>
-                    <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-[#059669]/15 text-[var(--state-success)] border border-[#059669]/30">
                       {filledCount} of {currentFormDef.fields.length} completed
                     </span>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                  <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
                     Every field below can be clicked and edited with keyboard or by clicking the mini microphone icon.
                   </p>
                 </div>
@@ -700,9 +716,9 @@ export function App() {
                       }
                     }}
                     title="Speak form summary"
-                    className="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                    className="px-3.5 py-2 rounded-xl bg-[var(--surface-secondary)] hover:bg-[var(--border-subtle)] border border-[var(--border-subtle)] text-[var(--text-primary)] font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                   >
-                    <Volume2 className="w-3.5 h-3.5 text-indigo-600" />
+                    <Volume2 className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
                     <span>Read Summary</span>
                   </button>
                 </div>
@@ -728,13 +744,13 @@ export function App() {
               </div>
 
               {/* Bottom Action Bar */}
-              <div className="mt-10 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="mt-10 pt-6 border-t border-[var(--border-subtle)] flex flex-col sm:flex-row items-center justify-between gap-4">
                 <button
                   onClick={() => {
                     soundFx.playClick();
                     setFieldStates(initializeFieldStates(currentFormDef.fields));
                   }}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--state-error)] font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Reset Form Fields</span>
@@ -742,11 +758,11 @@ export function App() {
 
                 <button
                   onClick={handleOpenReview}
-                  className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 hover:from-indigo-700 hover:to-violet-800 text-white font-bold text-base shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transform hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3 cursor-pointer"
+                  className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-[var(--accent-primary)] via-purple-600 to-[var(--accent-primary-hover)] hover:from-[var(--accent-primary-hover)] hover:to-purple-800 text-white font-bold text-base shadow-xl shadow-purple-500/25 transform hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3 cursor-pointer"
                 >
-                  <FileText className="w-5 h-5 text-indigo-200" />
+                  <FileText className="w-5 h-5 text-violet-200" />
                   <span>Review and Submit Application</span>
-                  <ArrowRight className="w-5 h-5 text-indigo-200" />
+                  <ArrowRight className="w-5 h-5 text-violet-200" />
                 </button>
               </div>
             </div>

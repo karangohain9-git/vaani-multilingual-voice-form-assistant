@@ -32,7 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigateHome,
 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
+    <header className="sticky top-0 z-40 bg-[var(--bg-header)]/95 backdrop-blur-md border-b border-[var(--border-subtle)] shadow-xs transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-18">
           {/* Brand Logo & Tagline */}
@@ -41,22 +41,22 @@ export const Navbar: React.FC<NavbarProps> = ({
               soundFx.playClick();
               onNavigateHome();
             }}
-            className="flex items-center space-x-3 text-left focus:outline-hidden focus:ring-2 focus:ring-indigo-500 rounded-xl p-1.5 group cursor-pointer"
+            className="flex items-center space-x-3 text-left focus:outline-hidden focus:ring-2 focus:ring-[var(--accent-primary)] rounded-xl p-1.5 group cursor-pointer"
             aria-label="Vaani Home"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 flex items-center justify-center shadow-md shadow-indigo-300/40 group-hover:scale-105 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent-primary)] via-indigo-600 to-violet-800 flex items-center justify-center shadow-md shadow-violet-900/40 group-hover:scale-105 transition-all">
               <span className="text-white text-xl font-black tracking-tight">वाणी</span>
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-2xl font-black tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
+                <span className="text-2xl font-black tracking-tight text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">
                   Vaani
                 </span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/70 flex items-center gap-1 shadow-2xs">
-                  <Sparkles className="w-3 h-3 text-indigo-600" /> AI Powered
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#8B5CF6]/15 text-[var(--accent-primary)] border border-[#8B5CF6]/30 flex items-center gap-1 shadow-2xs">
+                  <Sparkles className="w-3 h-3 text-[var(--accent-primary)]" /> AI Powered
                 </span>
               </div>
-              <p className="text-xs text-slate-500 hidden sm:block font-medium">
+              <p className="text-xs text-[var(--text-secondary)] hidden sm:block font-medium">
                 Digital Form Automation for Everyone
               </p>
             </div>
@@ -73,10 +73,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   soundFx.playClick();
                   onLanguageChange(e.target.value as Language);
                 }}
-                className="text-xs sm:text-sm font-bold bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-xl px-3 py-2 pr-8 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden cursor-pointer transition-colors shadow-2xs"
+                className="text-xs sm:text-sm font-bold bg-[var(--surface-secondary)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 pr-8 focus:ring-2 focus:ring-[var(--accent-primary)] focus:outline-hidden cursor-pointer transition-colors shadow-2xs"
               >
                 {SUPPORTED_LANGUAGES.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
+                  <option key={lang.code} value={lang.code} className="bg-[var(--surface-card)] text-[var(--text-primary)]">
                     {lang.nativeName} ({lang.name})
                   </option>
                 ))}
@@ -101,18 +101,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               }
               className={`p-2.5 rounded-xl border transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer ${
                 voiceGuidanceEnabled
-                  ? 'bg-indigo-50 text-indigo-700 border-indigo-200 shadow-2xs'
-                  : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+                  ? 'bg-[#8B5CF6]/15 text-[var(--accent-primary)] border-[#8B5CF6]/30 shadow-2xs'
+                  : 'bg-[var(--surface-secondary)] text-[var(--text-secondary)] border border-[var(--border-subtle)] hover:bg-[var(--border-subtle)]'
               }`}
             >
               {voiceGuidanceEnabled ? (
                 <>
-                  <Volume2 className="w-4 h-4 text-indigo-600 animate-pulse" />
+                  <Volume2 className="w-4 h-4 text-[var(--accent-primary)] animate-pulse" />
                   <span className="hidden md:inline">Voice ON</span>
                 </>
               ) : (
                 <>
-                  <VolumeX className="w-4 h-4 text-slate-400" />
+                  <VolumeX className="w-4 h-4 text-[var(--text-secondary)]" />
                   <span className="hidden md:inline">Muted</span>
                 </>
               )}
@@ -126,9 +126,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               title={`Text Size: ${fontSizeMode} (Click to toggle normal/large/xlarge)`}
               aria-label="Cycle Font Size"
-              className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors flex items-center gap-1 text-xs font-bold cursor-pointer"
+              className="p-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] transition-colors flex items-center gap-1 text-xs font-bold cursor-pointer"
             >
-              <Type className="w-4 h-4 text-slate-600" />
+              <Type className="w-4 h-4 text-[var(--text-secondary)]" />
               <span className="uppercase text-[11px] font-black">
                 {fontSizeMode === 'normal' ? '1x' : fontSizeMode === 'large' ? '1.2x' : '1.4x'}
               </span>
@@ -144,14 +144,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
                 darkMode
-                  ? 'bg-indigo-950/80 text-amber-300 border-indigo-700/60 hover:bg-indigo-900 hover:text-amber-200 shadow-xs ring-1 ring-indigo-500/30'
-                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  ? 'bg-[var(--surface-secondary)] text-[#FBBF24] border-[var(--border-subtle)] hover:bg-[var(--border-subtle)] shadow-xs ring-1 ring-[#8B5CF6]/30'
+                  : 'bg-[var(--surface-secondary)] text-[var(--text-secondary)] border border-[var(--border-subtle)] hover:bg-[var(--border-subtle)]'
               }`}
             >
               {darkMode ? (
-                <Sun className="w-4 h-4 text-amber-400" />
+                <Sun className="w-4 h-4 text-[#FBBF24]" />
               ) : (
-                <Moon className="w-4 h-4 text-slate-700" />
+                <Moon className="w-4 h-4 text-[var(--text-secondary)]" />
               )}
             </button>
 
@@ -163,9 +163,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               title="How Vaani Works"
               aria-label="How Vaani Works"
-              className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors flex items-center gap-1.5 text-xs font-bold hidden sm:flex cursor-pointer"
+              className="p-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] transition-colors flex items-center gap-1.5 text-xs font-bold hidden sm:flex cursor-pointer"
             >
-              <HelpCircle className="w-4 h-4 text-indigo-600" />
+              <HelpCircle className="w-4 h-4 text-[var(--accent-primary)]" />
               <span>Guide</span>
             </button>
 
@@ -177,9 +177,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               title="System Configuration & Diagnostics"
               aria-label="System Settings & Diagnostics"
-              className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer"
+              className="p-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] transition-colors cursor-pointer"
             >
-              <Settings className="w-4 h-4 text-slate-600" />
+              <Settings className="w-4 h-4 text-[var(--text-secondary)]" />
             </button>
           </div>
         </div>

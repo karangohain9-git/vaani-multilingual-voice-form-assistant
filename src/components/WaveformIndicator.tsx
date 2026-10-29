@@ -12,9 +12,9 @@ export const WaveformIndicator: React.FC<WaveformIndicatorProps> = ({
 }) => {
   if (!isListening) {
     return (
-      <div className="flex items-center justify-center space-x-1.5 h-10 px-4 py-2 bg-slate-100/70 rounded-full border border-slate-200/60">
-        <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse" />
+      <div className="flex items-center justify-center space-x-1.5 h-10 px-4 py-2 bg-[var(--surface-secondary)] rounded-full border border-[var(--border-subtle)]">
+        <span className="text-[11px] font-medium text-[var(--text-muted)] flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] opacity-60 animate-pulse" />
           Microphone standby
         </span>
       </div>

@@ -57,6 +57,15 @@ export class VoiceAssistanceService {
       if (hindiVoice) return hindiVoice;
     }
 
+    if (lang === 'as-IN') {
+      const assameseVoice = this.voices.find(
+        (v) =>
+          v.lang.toLowerCase().includes('as') ||
+          v.name.toLowerCase().includes('assamese')
+      );
+      if (assameseVoice) return assameseVoice;
+    }
+
     if (lang === 'en-IN' || lang === 'as-IN') {
       const indianEnglish = this.voices.find(
         (v) =>

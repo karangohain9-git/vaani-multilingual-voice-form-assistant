@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Volume2, AlertCircle, Sparkles, Check, HelpCircle, Mic, MicOff } from 'lucide-react';
 import type { FormFieldDefinition, FieldState, Language } from '../types';
 import { voiceAssistant } from '../services/speechSynthesis';
@@ -23,6 +23,16 @@ export const FormFieldItem: React.FC<FormFieldItemProps> = ({
   isMissing,
 }) => {
   const [isFieldRecording, setIsFieldRecording] = useState(false);
+  const [fieldAdvisory, setFieldAdvisory] = useState<string | null>(null);
+
+  // Stop recording if the language changes
+  useEffect(() => {
+    if (isFieldRecording) {
+      speechService.stop();
+      setIsFieldRecording(false);
+    }
+    setFieldAdvisory(null);
+  }, [currentLanguage]);
 
   const handleSpeakFieldPrompt = () => {
     soundFx.playClick();
@@ -40,20 +50,27 @@ export const FormFieldItem: React.FC<FormFieldItemProps> = ({
 
     soundFx.playRecordStart();
     setIsFieldRecording(true);
+    setFieldAdvisory(null);
     speechService.setLanguage(currentLanguage);
 
     speechService.start({
       onStart: () => setIsFieldRecording(true),
-      onResult: (text) => {
+      onResult: (text, _isFinal, advisory) => {
         if (text && text.trim()) {
           onChange(text.trim());
+          if (advisory) {
+            setFieldAdvisory(advisory.message);
+          } else {
+            setFieldAdvisory(null);
+          }
         }
       },
       onEnd: () => {
         setIsFieldRecording(false);
       },
-      onError: () => {
+      onError: (errMsg) => {
         setIsFieldRecording(false);
+        setFieldAdvisory(errMsg);
       },
     });
   };
@@ -62,16 +79,26 @@ export const FormFieldItem: React.FC<FormFieldItemProps> = ({
   const placeholderText = field.placeholder[currentLanguage] || field.placeholder['en-IN'];
   const helpText = field.helpText ? field.helpText[currentLanguage] : undefined;
 
+  const isValueEmpty =
+    state.value === undefined ||
+    state.value === null ||
+    (typeof state.value === 'string' && state.value.trim() === '');
+
+  // Only highlight as an active validation error if the field has an invalid value, or was touched/edited
+  const hasActiveError = Boolean(error && (!isValueEmpty || state.isEdited));
+
   return (
     <div
       className={`p-5 rounded-2xl border transition-all ${
-        error
-          ? 'bg-rose-50/50 border-rose-300 ring-2 ring-rose-200/50'
+        hasActiveError
+          ? 'bg-[var(--bg-error-card)] border-[var(--border-error)] shadow-sm'
           : state.isUncertain
-          ? 'bg-amber-50/40 border-amber-300'
+          ? 'bg-[var(--surface-card)] border-[var(--state-warning)]/50 shadow-xs'
           : state.source === 'ai'
-          ? 'bg-gradient-to-br from-indigo-50/30 via-white to-white border-indigo-200/90 shadow-2xs'
-          : 'bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs'
+          ? 'bg-[var(--surface-card)] border-[var(--accent-primary)]/50 shadow-[0_0_15px_rgba(139,92,246,0.08)]'
+          : state.isEdited
+          ? 'bg-[var(--surface-card)] border-[var(--state-success)]/40 shadow-xs'
+          : 'bg-[var(--surface-card)] border-[var(--border-subtle)] hover:border-[var(--border-input)] shadow-xs'
       }`}
     >
       {/* Field Header: Label, Badges, Speaker & Mic controls */}
@@ -79,11 +106,11 @@ export const FormFieldItem: React.FC<FormFieldItemProps> = ({
         <div className="flex items-center gap-2 flex-wrap">
           <label
             htmlFor={`field-${field.id}`}
-            className="text-sm font-bold text-slate-900 flex items-center gap-1 cursor-pointer"
+            className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1 cursor-pointer"
           >
             {labelText}
             {field.required && (
-              <span className="text-rose-600 font-bold" title="Required field">
+              <span className="text-[var(--state-error)] font-bold" title="Required field">
                 *
               </span>
             )}
@@ -91,20 +118,20 @@ export const FormFieldItem: React.FC<FormFieldItemProps> = ({
 
           {/* AI vs Manual Badges */}
           {state.source === 'ai' && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
-              <Sparkles className="w-3 h-3 text-indigo-600" /> AI-filled
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#8B5CF6]/15 text-[var(--accent-primary)] border border-[#8B5CF6]/30">
+              <Sparkles className="w-3 h-3 text-[var(--accent-primary)]" /> AI-filled
             </span>
           )}
 
           {state.isEdited && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">
-              <Check className="w-3 h-3 text-emerald-600" /> User edited
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#059669]/15 text-[var(--state-success)] border border-[#059669]/30">
+              <Check className="w-3 h-3 text-[var(--state-success)]" /> User edited
             </span>
           )}
 
           {state.isUncertain && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
-              <AlertCircle className="w-3 h-3 text-amber-600" /> Needs review
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#B45309]/15 text-[var(--state-warning)] border border-[#B45309]/30">
+              <AlertCircle className="w-3 h-3 text-[var(--state-warning)]" /> Needs review
             </span>
           )}
         </div>
@@ -116,10 +143,10 @@ export const FormFieldItem: React.FC<FormFieldItemProps> = ({
             onClick={handleToggleFieldMic}
             title={isFieldRecording ? 'Stop voice recording' : `Speak ${labelText}`}
             aria-label={`Speak ${labelText}`}
-            className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+            className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
               isFieldRecording
-                ? 'bg-rose-600 text-white animate-pulse'
-                : 'bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-700'
+                ? 'bg-[var(--state-error)] border-[var(--state-error)] text-white animate-pulse'
+                : 'bg-[var(--surface-secondary)] hover:bg-[var(--accent-primary)] text-[var(--text-primary)] hover:text-white border border-[var(--border-subtle)] hover:border-[var(--accent-primary)]'
             }`}
           >
             {isFieldRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
@@ -130,7 +157,7 @@ export const FormFieldItem: React.FC<FormFieldItemProps> = ({
             onClick={handleSpeakFieldPrompt}
             title={`Read instructions for ${labelText} aloud`}
             aria-label={`Read instructions for ${labelText} aloud`}
-            className="p-1.5 rounded-lg bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-700 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg bg-[var(--surface-secondary)] hover:bg-[var(--accent-primary)] text-[var(--text-primary)] hover:text-white border border-[var(--border-subtle)] hover:border-[var(--accent-primary)] transition-colors cursor-pointer"
           >
             <Volume2 className="w-4 h-4" />
           </button>
@@ -147,9 +174,9 @@ export const FormFieldItem: React.FC<FormFieldItemProps> = ({
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholderText}
             className={`w-full px-4 py-3 rounded-xl border text-sm transition-all focus:outline-hidden ${
-              error
-                ? 'border-rose-400 focus:ring-2 focus:ring-rose-400 bg-white'
-                : 'border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white'
+              hasActiveError
+                ? 'bg-[var(--bg-error-card)] border-[var(--border-error)] text-[var(--text-primary)] focus:border-[var(--state-error)] focus:ring-1 focus:ring-[var(--state-error)]'
+                : 'bg-[var(--surface-input)] border-[var(--border-input)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]'
             }`}
           />
         ) : field.type === 'select' ? (
@@ -157,15 +184,15 @@ export const FormFieldItem: React.FC<FormFieldItemProps> = ({
             id={`field-${field.id}`}
             value={state.value ?? ''}
             onChange={(e) => onChange(e.target.value)}
-            className={`w-full px-4 py-3 rounded-xl border text-sm transition-all focus:outline-hidden bg-white ${
-              error
-                ? 'border-rose-400 focus:ring-2 focus:ring-rose-400'
-                : 'border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
+            className={`w-full px-4 py-3 rounded-xl border text-sm transition-all focus:outline-hidden ${
+              hasActiveError
+                ? 'bg-[var(--bg-error-card)] border-[var(--border-error)] text-[var(--text-primary)] focus:border-[var(--state-error)] focus:ring-1 focus:ring-[var(--state-error)]'
+                : 'bg-[var(--surface-input)] border-[var(--border-input)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]'
             }`}
           >
-            <option value="">-- {placeholderText} --</option>
+            <option value="" className="bg-[var(--surface-card)] text-[var(--text-primary)]">-- {placeholderText} --</option>
             {field.options?.map((opt) => (
-              <option key={opt.value} value={opt.value}>
+              <option key={opt.value} value={opt.value} className="bg-[var(--surface-card)] text-[var(--text-primary)]">
                 {opt.label[currentLanguage] || opt.label['en-IN']}
               </option>
             ))}
@@ -180,35 +207,43 @@ export const FormFieldItem: React.FC<FormFieldItemProps> = ({
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholderText}
             className={`w-full px-4 py-3 rounded-xl border text-sm transition-all focus:outline-hidden ${
-              error
-                ? 'border-rose-400 focus:ring-2 focus:ring-rose-400 bg-white'
-                : 'border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white'
+              hasActiveError
+                ? 'bg-[var(--bg-error-card)] border-[var(--border-error)] text-[var(--text-primary)] focus:border-[var(--state-error)] focus:ring-1 focus:ring-[var(--state-error)]'
+                : 'bg-[var(--surface-input)] border-[var(--border-input)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]'
             }`}
           />
         )}
       </div>
 
       {/* Help text */}
-      {helpText && !error && (
-        <p className="mt-1.5 text-xs text-slate-500 flex items-center gap-1">
-          <HelpCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+      {helpText && !hasActiveError && (
+        <p className="mt-1.5 text-xs text-[var(--text-secondary)] flex items-center gap-1">
+          <HelpCircle className="w-3.5 h-3.5 text-[var(--text-secondary)] shrink-0" />
           <span>{helpText}</span>
         </p>
       )}
 
       {/* Validation Error Message */}
-      {error && (
-        <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-rose-700 bg-rose-50 p-2 rounded-lg border border-rose-200">
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+      {hasActiveError && (
+        <div className="mt-2.5 flex items-center gap-2 text-xs font-medium text-[var(--state-error)] bg-[var(--bg-error-card)] p-2.5 rounded-xl border border-[var(--border-error)]">
+          <AlertCircle className="w-4 h-4 shrink-0 text-[var(--state-error)]" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Missing indicator prompt if not yet filled */}
-      {isMissing && !error && (
-        <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200">
-          <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+      {isMissing && !hasActiveError && (
+        <div className="mt-2 flex items-center gap-2 text-xs font-medium text-[var(--text-secondary)] bg-[var(--surface-secondary)] p-2 rounded-xl border border-[var(--border-subtle)]">
+          <AlertCircle className="w-4 h-4 shrink-0 text-[var(--state-warning)]" />
           <span>Required information missing. Click the mic button above to speak this field.</span>
+        </div>
+      )}
+
+      {/* Script Mismatch / Engine Advisory */}
+      {fieldAdvisory && (
+        <div className="mt-2 flex items-start gap-1.5 text-xs font-medium text-[var(--state-warning)] bg-[var(--surface-secondary)] p-2.5 rounded-xl border border-[var(--state-warning)]/40">
+          <AlertCircle className="w-4 h-4 shrink-0 text-[var(--state-warning)] mt-0.5" />
+          <span className="leading-snug">{fieldAdvisory}</span>
         </div>
       )}
     </div>

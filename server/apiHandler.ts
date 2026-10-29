@@ -1,4 +1,5 @@
 import https from "node:https";
+import { heuristicExtract as localHeuristicExtract } from "../src/utils/localExtractor.ts";
 
 export interface FormFieldSchemaInput {
   id: string;
@@ -24,156 +25,14 @@ export interface ExtractRequestBody {
 export function heuristicExtract(
   transcript: string,
   fields: FormFieldSchemaInput[],
+  languageHint?: string,
 ): {
   extracted: Record<string, any>;
   uncertain_fields: string[];
   missing_fields: string[];
   summary: string;
 } {
-  const extracted: Record<string, any> = {};
-  const uncertain_fields: string[] = [];
-  const text = transcript
-    .trim()
-    .replace(/[০-৯]/g, (d) => String(d.charCodeAt(0) - 0x09e6))
-    .replace(/[०-९]/g, (d) => String(d.charCodeAt(0) - 0x0966));
-
-  // 1. Phone extraction: look for 10 consecutive digits or +91 pattern
-  const phoneMatch = text.match(/(?:\+91[\s-]?)?([6-9]\d{4}[\s-]?\d{5})/);
-  if (phoneMatch) {
-    const raw = phoneMatch[0].replace(/\D/g, "");
-    extracted.phone =
-      raw.length === 12 && raw.startsWith("91") ? raw.slice(2) : raw.slice(-10);
-  }
-
-  // 2. Email extraction
-  const emailMatch = text.match(
-    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/,
-  );
-  if (emailMatch) {
-    extracted.email = emailMatch[0].toLowerCase();
-  }
-
-  // 3. Age extraction (English: "24 years old" / "age is 24", Hindi: "24 साल" / "उम्र 24", Assamese: "২৪ বছৰ" / "বয়স ২৪")
-  const ageMatch =
-    text.match(
-      /(?:age\s+(?:is\s+)?|उम्र\s+|বয়স\s+)?(\d{1,3})\s*(?:years|साल|वर्ष|বছৰ)/i,
-    ) || text.match(/(?:उम्र|বয়স)\s*(\d{1,3})/i);
-  if (ageMatch) {
-    const ageNum = parseInt(ageMatch[1], 10);
-    if (ageNum >= 10 && ageNum <= 120) {
-      extracted.age = ageNum;
-    }
-  }
-
-  // 4. Name extraction
-  // English: "My name is Rahul Sharma" / "I am Rahul Sharma"
-  // Hindi: "मेरा नाम राहुल शर्मा है"
-  // Assamese: "মোৰ নাম ৰাহুল শৰ্মা"
-  const hindiNameMatch = text.match(
-    /मेरा\s+नाम\s+([\u0900-\u097Fa-zA-Z\s]+?)\s+है/,
-  );
-  const englishNameMatch = text.match(
-    /(?:my\s+name\s+is|i\s+am)\s+([a-zA-Z\s]+?)(?:\.|\s+i\s+|\s+my\s+|$)/i,
-  );
-  const assameseNameMatch = text.match(
-    /মোৰ\s+নাম\s+([\u0980-\u09FFa-zA-Z\s]+?)(?:[।.]|\s+মোৰ\s+|$)/,
-  );
-
-  if (hindiNameMatch && hindiNameMatch[1].trim()) {
-    extracted.full_name = hindiNameMatch[1].trim();
-  } else if (englishNameMatch && englishNameMatch[1].trim()) {
-    extracted.full_name = englishNameMatch[1].trim();
-  } else if (assameseNameMatch && assameseNameMatch[1].trim()) {
-    extracted.full_name = assameseNameMatch[1].trim();
-  }
-
-  // 5. State / City detection for prominent Indian locations (especially Assam / Northeast & metros)
-  const states = [
-    "Assam",
-    "असम",
-    "অসম",
-    "Delhi",
-    "दिल्ली",
-    "Maharashtra",
-    "महाराष्ट्र",
-    "West Bengal",
-    "पश्चिम बंगाल",
-  ];
-  for (const st of states) {
-    if (text.toLowerCase().includes(st.toLowerCase())) {
-      extracted.state = "Assam"; // normalized
-      break;
-    }
-  }
-
-  const cities = [
-    "Guwahati",
-    "गुवाहाटी",
-    "গুৱাহাটী",
-    "Dibrugarh",
-    "डिब्रूगढ़",
-    "Jorhat",
-    "जोरहाट",
-    "Silchar",
-    "Nagaon",
-    "Tezpur",
-  ];
-  for (const ct of cities) {
-    if (text.toLowerCase().includes(ct.toLowerCase())) {
-      extracted.city =
-        ct.includes("गुवाहाटी") || ct.includes("গুৱাহাটী")
-          ? "Guwahati"
-          : ct.includes("डिब्रूगढ़")
-            ? "Dibrugarh"
-            : ct.includes("जोरहाट")
-              ? "Jorhat"
-              : ct;
-      break;
-    }
-  }
-
-  // 6. Address snippet extraction
-  const addressMatch = text.match(
-    /(?:at\s+|रहता हूँ,?\s*|থাকোঁ,?\s*)([\w\d\s,#/-]+(?:Road|Nagar|Ward|Street|House|मकान|नगर|ৰোড|নগৰ)[\w\d\s,#/-]*)/i,
-  );
-  if (addressMatch) {
-    extracted.address = addressMatch[1].trim();
-  }
-
-  // 7. Preferred language
-  if (text.includes("Hindi") || text.includes("हिन्दी")) {
-    extracted.preferred_language = "Hindi";
-  } else if (text.includes("Assamese") || text.includes("অসমীয়া")) {
-    extracted.preferred_language = "Assamese";
-  } else if (text.includes("English") || text.includes("अंग्रेजी")) {
-    extracted.preferred_language = "English";
-  } else {
-    // Default to the language detected in transcript
-    // Check Assamese/Bengali block (U+0980..U+09FF) first because danda (।) is located in the Devanagari code block (U+0964)
-    extracted.preferred_language = /[\u0980-\u09FF]/.test(text)
-      ? "Assamese"
-      : /[\u0904-\u0939\u0950-\u0963\u0970-\u097F]/.test(text)
-        ? "Hindi"
-        : "English";
-  }
-
-  // 8. Missing required fields calculation
-  const missing_fields = fields
-    .filter(
-      (f) =>
-        f.required &&
-        (extracted[f.id] === undefined ||
-          extracted[f.id] === null ||
-          extracted[f.id] === ""),
-    )
-    .map((f) => f.id);
-
-  return {
-    extracted,
-    uncertain_fields,
-    missing_fields,
-    summary: `Extracted ${Object.keys(extracted).length} field(s) from speech transcript using local fallback extractor.`,
-  };
+  return localHeuristicExtract(transcript, fields, languageHint);
 }
 
 /**
