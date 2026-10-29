@@ -21,6 +21,109 @@ interface HeroProps {
   onSelectSamplePhrase: (text: string) => void;
 }
 
+export interface PreviewContent {
+  mainHeading: string;
+  playBtnText: string;
+  playingBtnText: string;
+  resetBtnTitle: string;
+  spokenCitizenVoice: string;
+  languageBadge: string;
+  samplePhrase: string;
+  naturalSpeech: string;
+  noJargon: string;
+  aiExtractedHeading: string;
+  validatedJsonBadge: string;
+  applicantNameLabel: string;
+  applicantNameValue: string;
+  mobilePhoneLabel: string;
+  mobilePhoneValue: string;
+  phoneBadge: string;
+  ageLabel: string;
+  ageValue: string;
+  locationLabel: string;
+  locationValue: string;
+  missingFieldLabel: string;
+  missingFieldPrompt: string;
+}
+
+export const PREVIEW_CONTENT: Record<Language, PreviewContent> = {
+  'en-IN': {
+    mainHeading: 'Interactive Voice Automation Preview',
+    playBtnText: 'Play Interactive Simulation',
+    playingBtnText: 'Playing Demo Audio...',
+    resetBtnTitle: 'Reset Preview',
+    spokenCitizenVoice: 'Spoken Citizen Voice',
+    languageBadge: 'Natural English',
+    samplePhrase:
+      'My name is Rahul Sharma. I am 24 years old. My phone number is 9876543210. I live in Guwahati, Assam at Zoo Road. I need monthly welfare assistance.',
+    naturalSpeech: 'Natural conversational speech',
+    noJargon: 'No form jargon',
+    aiExtractedHeading: 'AI Extracted & Mapped',
+    validatedJsonBadge: 'Validated JSON',
+    applicantNameLabel: 'Applicant Name:',
+    applicantNameValue: 'Rahul Sharma',
+    mobilePhoneLabel: 'Mobile Phone:',
+    mobilePhoneValue: '9876543210',
+    phoneBadge: '10-Digit OK',
+    ageLabel: 'Age:',
+    ageValue: '24 Years',
+    locationLabel: 'Location:',
+    locationValue: 'Guwahati, Assam',
+    missingFieldLabel: 'Missing Field Detection:',
+    missingFieldPrompt: 'Address Prompted',
+  },
+  'hi-IN': {
+    mainHeading: 'इंटरैक्टिव वॉयस ऑटोमेशन पूर्वावलोकन',
+    playBtnText: 'इंटरैक्टिव सिमुलेशन चलाएं',
+    playingBtnText: 'डेमो ऑडियो चल रहा है...',
+    resetBtnTitle: 'पूर्वावलोकन रीसेट करें',
+    spokenCitizenVoice: 'नागरिक की मौखिक आवाज़',
+    languageBadge: 'प्राकृतिक हिन्दी',
+    samplePhrase:
+      'मेरा नाम राहुल शर्मा है। मेरी उम्र 24 साल है। मेरा मोबाइल नंबर 9876543210 है। मैं गुवाहाटी, असम में रहता हूँ। मुझे राशन सहायता चाहिए।',
+    naturalSpeech: 'स्वाभाविक बातचीत वाली बोली',
+    noJargon: 'फॉर्म की जटिलता से मुक्त',
+    aiExtractedHeading: 'एआई द्वारा निकाला और भरा गया',
+    validatedJsonBadge: 'सत्यापित जेसन (JSON)',
+    applicantNameLabel: 'आवेदक का नाम:',
+    applicantNameValue: 'राहुल शर्मा',
+    mobilePhoneLabel: 'मोबाइल फोन:',
+    mobilePhoneValue: '9876543210',
+    phoneBadge: '10 अंक मान्य',
+    ageLabel: 'उम्र:',
+    ageValue: '24 वर्ष',
+    locationLabel: 'स्थान:',
+    locationValue: 'गुवाहाटी, असम',
+    missingFieldLabel: 'छूटे हुए फ़ील्ड की पहचान:',
+    missingFieldPrompt: 'घर का पता पूछा गया',
+  },
+  'as-IN': {
+    mainHeading: 'ইণ্টাৰেক্টিভ ভয়েচ অটোমেচন পূৰ্বদৰ্শন',
+    playBtnText: 'ইণ্টাৰেক্টিভ অনুকৰণ চলাওক',
+    playingBtnText: 'ডেমো অডিঅ’ চলি আছে...',
+    resetBtnTitle: 'পূৰ্বদৰ্শন পুনৰায় ঠিক কৰক',
+    spokenCitizenVoice: 'নাগৰিকৰ কথিত কণ্ঠ',
+    languageBadge: 'প্ৰাকৃতিক অসমীয়া',
+    samplePhrase:
+      'মোৰ নাম ৰাহুল শৰ্মা। মোৰ বয়স ২৪ বছৰ। মোৰ ফোন নম্বৰ ৯৮৭৬৫৪৩২১০। মই গুৱাহাটী, অসমত থাকোঁ। মোক খাদ্য সাহায্য আঁচনিৰ প্ৰয়োজন।',
+    naturalSpeech: 'স্বাভাৱিক কথা-বতৰাৰ কণ্ঠ',
+    noJargon: 'কোনো জটিল শব্দ নোহোৱাকৈ',
+    aiExtractedHeading: 'এআই দ্বাৰা নিষ্কাশিত আৰু সংলগ্ন',
+    validatedJsonBadge: 'পৰীক্ষিত জেছন (JSON)',
+    applicantNameLabel: 'আবেদনকাৰীৰ নাম:',
+    applicantNameValue: 'ৰাহুল শৰ্মা',
+    mobilePhoneLabel: 'ম’বাইল ফোন:',
+    mobilePhoneValue: '৯৮৭৬৫৪৩২১০',
+    phoneBadge: '১০ টা অংক সঠিক',
+    ageLabel: 'বয়স:',
+    ageValue: '২৪ বছৰ',
+    locationLabel: 'স্থান:',
+    locationValue: 'গুৱাহাটী, অসম',
+    missingFieldLabel: 'অনুপস্থিত তথ্য চিনাক্তকৰণ:',
+    missingFieldPrompt: 'ঠিকনাৰ বিষয়ে সোধা হৈছে',
+  },
+};
+
 export const Hero: React.FC<HeroProps> = ({
   currentLanguage,
   onStartForm,
@@ -28,19 +131,24 @@ export const Hero: React.FC<HeroProps> = ({
 }) => {
   const [isDemoSimulating, setIsDemoSimulating] = useState(false);
   const [demoStep, setDemoStep] = useState<number>(0);
+  const [prevLanguage, setPrevLanguage] = useState(currentLanguage);
 
-  const samplePhraseHindi =
-    "मेरा नाम राहुल शर्मा है। मेरी उम्र 24 साल है। मेरा मोबाइल नंबर 9876543210 है। मैं गुवाहाटी, असम में रहता हूँ। मुझे राशन सहायता चाहिए।";
-  const samplePhraseEnglish =
-    "My name is Rahul Sharma. I am 24 years old. My phone number is 9876543210. I live in Guwahati, Assam at Zoo Road. I need monthly welfare assistance.";
+  // If language changes, reset any active demo simulation immediately
+  if (prevLanguage !== currentLanguage) {
+    setPrevLanguage(currentLanguage);
+    setIsDemoSimulating(false);
+    setDemoStep(0);
+    voiceAssistant.stop();
+  }
+
+  const preview = PREVIEW_CONTENT[currentLanguage] || PREVIEW_CONTENT['en-IN'];
 
   const handleSimulateDemo = () => {
     soundFx.playClick();
     setIsDemoSimulating(true);
     setDemoStep(1);
 
-    const phrase =
-      currentLanguage === "hi-IN" ? samplePhraseHindi : samplePhraseEnglish;
+    const phrase = preview.samplePhrase;
 
     // Step 1: Speak audio and animate
     soundFx.playRecordStart();
@@ -127,11 +235,7 @@ export const Hero: React.FC<HeroProps> = ({
             <button
               onClick={() => {
                 soundFx.playClick();
-                onSelectSamplePhrase(
-                  currentLanguage === "hi-IN"
-                    ? samplePhraseHindi
-                    : samplePhraseEnglish,
-                );
+                onSelectSamplePhrase(preview.samplePhrase);
               }}
               className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-base border border-slate-200 shadow-sm hover:border-slate-300 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
@@ -165,7 +269,7 @@ export const Hero: React.FC<HeroProps> = ({
               <div className="w-3.5 h-3.5 rounded-full bg-amber-500 shadow-xs" />
               <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-xs" />
               <span className="text-xs font-bold text-slate-700 ml-2 tracking-wide uppercase">
-                Interactive Voice Automation Preview
+                {preview.mainHeading}
               </span>
             </div>
 
@@ -178,8 +282,8 @@ export const Hero: React.FC<HeroProps> = ({
                 <Play className="w-3.5 h-3.5 fill-indigo-600 text-indigo-600" />
                 <span>
                   {isDemoSimulating
-                    ? "Playing Demo Audio..."
-                    : "Play Interactive Simulation"}
+                    ? preview.playingBtnText
+                    : preview.playBtnText}
                 </span>
               </button>
 
@@ -187,7 +291,7 @@ export const Hero: React.FC<HeroProps> = ({
                 <button
                   onClick={handleResetDemo}
                   className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 transition-colors"
-                  title="Reset Preview"
+                  title={preview.resetBtnTitle}
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
@@ -201,20 +305,15 @@ export const Hero: React.FC<HeroProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
-                    <Mic className="w-4 h-4 text-indigo-600" /> Spoken Citizen
-                    Voice
+                    <Mic className="w-4 h-4 text-indigo-600" /> {preview.spokenCitizenVoice}
                   </span>
                   <span className="text-[11px] font-bold text-indigo-700 bg-white px-2 py-0.5 rounded-md border border-indigo-100 shadow-2xs">
-                    Natural Hindi / English
+                    {preview.languageBadge}
                   </span>
                 </div>
 
                 <div className="bg-white rounded-xl p-4 border border-slate-200/90 text-sm font-medium text-slate-800 leading-relaxed shadow-sm relative">
-                  "
-                  {currentLanguage === "hi-IN"
-                    ? samplePhraseHindi
-                    : samplePhraseEnglish}
-                  "
+                  "{preview.samplePhrase}"
                   {isDemoSimulating && (
                     <span className="inline-block w-2 h-4 bg-indigo-600 ml-1 animate-pulse align-middle" />
                   )}
@@ -224,10 +323,10 @@ export const Hero: React.FC<HeroProps> = ({
               <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs text-slate-500">
                 <span className="flex items-center gap-1">
                   <Volume2 className="w-3.5 h-3.5 text-indigo-600" />
-                  Natural conversational speech
+                  {preview.naturalSpeech}
                 </span>
                 <span className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md">
-                  No form jargon
+                  {preview.noJargon}
                 </span>
               </div>
             </div>
@@ -237,57 +336,56 @@ export const Hero: React.FC<HeroProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <Cpu className="w-4 h-4 text-indigo-600" /> AI Extracted &
-                    Mapped
+                    <Cpu className="w-4 h-4 text-indigo-600" /> {preview.aiExtractedHeading}
                   </span>
                   <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200">
-                    Validated JSON
+                    {preview.validatedJsonBadge}
                   </span>
                 </div>
 
                 <div className="space-y-2 text-xs">
                   <div className="bg-white rounded-xl p-2.5 border border-indigo-100/80 flex justify-between items-center shadow-2xs">
                     <span className="text-slate-500 font-medium">
-                      Applicant Name:
+                      {preview.applicantNameLabel}
                     </span>
                     <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                      Rahul Sharma
+                      {preview.applicantNameValue}
                       <span className="w-2 h-2 rounded-full bg-emerald-500" />
                     </span>
                   </div>
 
                   <div className="bg-white rounded-xl p-2.5 border border-indigo-100/80 flex justify-between items-center shadow-2xs">
                     <span className="text-slate-500 font-medium">
-                      Mobile Phone:
+                      {preview.mobilePhoneLabel}
                     </span>
                     <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                      9876543210
+                      {preview.mobilePhoneValue}
                       <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                        10-Digit OK
+                        {preview.phoneBadge}
                       </span>
                     </span>
                   </div>
 
                   <div className="bg-white rounded-xl p-2.5 border border-indigo-100/80 flex justify-between items-center shadow-2xs">
-                    <span className="text-slate-500 font-medium">Age:</span>
-                    <span className="font-bold text-slate-900">24 Years</span>
+                    <span className="text-slate-500 font-medium">{preview.ageLabel}</span>
+                    <span className="font-bold text-slate-900">{preview.ageValue}</span>
                   </div>
 
                   <div className="bg-white rounded-xl p-2.5 border border-indigo-100/80 flex justify-between items-center shadow-2xs">
                     <span className="text-slate-500 font-medium">
-                      Location:
+                      {preview.locationLabel}
                     </span>
                     <span className="font-bold text-slate-900">
-                      Guwahati, Assam
+                      {preview.locationValue}
                     </span>
                   </div>
                 </div>
               </div>
 
               <div className="mt-4 pt-3 border-t border-indigo-100 flex items-center justify-between text-xs text-indigo-900">
-                <span className="font-medium">Missing Field Detection:</span>
+                <span className="font-medium">{preview.missingFieldLabel}</span>
                 <span className="text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded-md">
-                  Address Prompted
+                  {preview.missingFieldPrompt}
                 </span>
               </div>
             </div>

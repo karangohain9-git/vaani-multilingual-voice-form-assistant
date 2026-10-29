@@ -3,12 +3,17 @@ import type { FormFieldDefinition, Language } from '../types';
 /**
  * Normalizes Indian phone numbers:
  * Strips whitespace, dashes, parens, and leading "+91" or "0" if 10 digits follow.
+ * Supports both ASCII (0-9) and Indic numerals (Assamese/Bengali ০-৯ and Devanagari ०-९).
  */
 export function normalizeIndianPhoneNumber(rawPhone: string | number | null | undefined): string {
   if (rawPhone === null || rawPhone === undefined) return '';
   const str = String(rawPhone).trim();
+  // Normalize Indic numerals (Assamese/Bengali and Devanagari) to ASCII digits
+  const asciiStr = str
+    .replace(/[০-৯]/g, (d) => String(d.charCodeAt(0) - 0x09e6))
+    .replace(/[०-९]/g, (d) => String(d.charCodeAt(0) - 0x0966));
   // Remove all non-digit characters
-  const digits = str.replace(/\D/g, '');
+  const digits = asciiStr.replace(/\D/g, '');
 
   // If 12 digits and starts with 91, extract the 10 digits
   if (digits.length === 12 && digits.startsWith('91')) {
@@ -52,9 +57,15 @@ export function isValidFullName(name: string): boolean {
 
 /**
  * Validates Age within reasonable range
+ * Supports both ASCII (0-9) and Indic numerals (Assamese/Bengali ০-৯ and Devanagari ०-९).
  */
 export function isValidAge(age: number | string, min = 18, max = 120): boolean {
-  const num = typeof age === 'number' ? age : parseInt(String(age).trim(), 10);
+  if (age === null || age === undefined) return false;
+  const str = String(age)
+    .trim()
+    .replace(/[০-৯]/g, (d) => String(d.charCodeAt(0) - 0x09e6))
+    .replace(/[०-९]/g, (d) => String(d.charCodeAt(0) - 0x0966));
+  const num = typeof age === 'number' ? age : parseInt(str, 10);
   if (isNaN(num)) return false;
   return num >= min && num <= max;
 }

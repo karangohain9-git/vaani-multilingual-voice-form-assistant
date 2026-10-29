@@ -41,6 +41,20 @@ describe('Server API Handler Tests', () => {
     expect(result.extracted.preferred_language).toBe('English');
   });
 
+  it('heuristically extracts Assamese speech transcript with Indic numerals', () => {
+    const assameseTranscript =
+      'মোৰ নাম ৰাহুল শৰ্মা। মোৰ বয়স ২৪ বছৰ। মোৰ ফোন নম্বৰ ৯৮৭৬৫৪৩২১০। মই গুৱাহাটী, অসমত থাকোঁ।';
+
+    const result = heuristicExtract(assameseTranscript, sampleFields);
+
+    expect(result.extracted.full_name).toBe('ৰাহুল শৰ্মা');
+    expect(result.extracted.age).toBe(24);
+    expect(result.extracted.phone).toBe('9876543210');
+    expect(result.extracted.city).toBe('Guwahati');
+    expect(result.extracted.state).toBe('Assam');
+    expect(result.extracted.preferred_language).toBe('Assamese');
+  });
+
   it('detects missing required fields in transcript', () => {
     const partialTranscript = 'My name is Priya. Phone is 9435123456.';
     const result = heuristicExtract(partialTranscript, sampleFields);

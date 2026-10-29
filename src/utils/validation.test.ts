@@ -20,6 +20,12 @@ describe('Validation Utility Tests', () => {
       expect(normalizeIndianPhoneNumber('09876543210')).toBe('9876543210');
     });
 
+    it('normalizes Assamese and Bengali numerals to standard 10-digit phone', () => {
+      expect(normalizeIndianPhoneNumber('৯৮৭৬৫৪৩২১০')).toBe('9876543210');
+      expect(normalizeIndianPhoneNumber('+91 ৯৮৭৬৫-৪৩২১০')).toBe('9876543210');
+      expect(isValidIndianPhone('৯৮৭৬৫৪৩২১০')).toBe(true);
+    });
+
     it('validates 10-digit mobile numbers starting with 6, 7, 8, or 9', () => {
       expect(isValidIndianPhone('9876543210')).toBe(true);
       expect(isValidIndianPhone('8877665544')).toBe(true);
@@ -55,6 +61,8 @@ describe('Validation Utility Tests', () => {
     it('validates reasonable age range', () => {
       expect(isValidAge(24, 18, 120)).toBe(true);
       expect(isValidAge('45', 18, 120)).toBe(true);
+      expect(isValidAge('২৪', 18, 120)).toBe(true);
+      expect(isValidAge('১৭', 18, 120)).toBe(false);
       expect(isValidAge(17, 18, 120)).toBe(false);
       expect(isValidAge(125, 18, 120)).toBe(false);
       expect(isValidAge('invalid', 18, 120)).toBe(false);

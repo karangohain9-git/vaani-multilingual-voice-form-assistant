@@ -1,4 +1,4 @@
-import https from 'node:https';
+import https from "node:https";
 
 export interface FormFieldSchemaInput {
   id: string;
@@ -23,7 +23,7 @@ export interface ExtractRequestBody {
  */
 export function heuristicExtract(
   transcript: string,
-  fields: FormFieldSchemaInput[]
+  fields: FormFieldSchemaInput[],
 ): {
   extracted: Record<string, any>;
   uncertain_fields: string[];
@@ -32,25 +32,32 @@ export function heuristicExtract(
 } {
   const extracted: Record<string, any> = {};
   const uncertain_fields: string[] = [];
-  const text = transcript.trim();
+  const text = transcript
+    .trim()
+    .replace(/[০-৯]/g, (d) => String(d.charCodeAt(0) - 0x09e6))
+    .replace(/[०-९]/g, (d) => String(d.charCodeAt(0) - 0x0966));
 
   // 1. Phone extraction: look for 10 consecutive digits or +91 pattern
   const phoneMatch = text.match(/(?:\+91[\s-]?)?([6-9]\d{4}[\s-]?\d{5})/);
   if (phoneMatch) {
-    const raw = phoneMatch[0].replace(/\D/g, '');
-    extracted.phone = raw.length === 12 && raw.startsWith('91') ? raw.slice(2) : raw.slice(-10);
+    const raw = phoneMatch[0].replace(/\D/g, "");
+    extracted.phone =
+      raw.length === 12 && raw.startsWith("91") ? raw.slice(2) : raw.slice(-10);
   }
 
   // 2. Email extraction
-  const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  const emailMatch = text.match(
+    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/,
+  );
   if (emailMatch) {
     extracted.email = emailMatch[0].toLowerCase();
   }
 
-  // 3. Age extraction (English: "24 years old" / "age is 24", Hindi: "24 साल" / "उम्र 24")
+  // 3. Age extraction (English: "24 years old" / "age is 24", Hindi: "24 साल" / "उम्र 24", Assamese: "২৪ বছৰ" / "বয়স ২৪")
   const ageMatch =
-    text.match(/(?:age\s+(?:is\s+)?|उम्र\s+|বয়স\s+)?(\d{1,3})\s*(?:years|साल|वर्ष|বছৰ)/i) ||
-    text.match(/(?:उम्र|বয়স)\s*(\d{1,3})/i);
+    text.match(
+      /(?:age\s+(?:is\s+)?|उम्र\s+|বয়স\s+)?(\d{1,3})\s*(?:years|साल|वर्ष|বছৰ)/i,
+    ) || text.match(/(?:उम्र|বয়স)\s*(\d{1,3})/i);
   if (ageMatch) {
     const ageNum = parseInt(ageMatch[1], 10);
     if (ageNum >= 10 && ageNum <= 120) {
@@ -62,9 +69,15 @@ export function heuristicExtract(
   // English: "My name is Rahul Sharma" / "I am Rahul Sharma"
   // Hindi: "मेरा नाम राहुल शर्मा है"
   // Assamese: "মোৰ নাম ৰাহুল শৰ্মা"
-  const hindiNameMatch = text.match(/मेरा\s+नाम\s+([\u0900-\u097Fa-zA-Z\s]+?)\s+है/);
-  const englishNameMatch = text.match(/(?:my\s+name\s+is|i\s+am)\s+([a-zA-Z\s]+?)(?:\.|\s+i\s+|\s+my\s+|$)/i);
-  const assameseNameMatch = text.match(/মোৰ\s+নাম\s+([\u0980-\u09FFa-zA-Z\s]+?)(?:\.|\s+মোৰ\s+|$)/);
+  const hindiNameMatch = text.match(
+    /मेरा\s+नाम\s+([\u0900-\u097Fa-zA-Z\s]+?)\s+है/,
+  );
+  const englishNameMatch = text.match(
+    /(?:my\s+name\s+is|i\s+am)\s+([a-zA-Z\s]+?)(?:\.|\s+i\s+|\s+my\s+|$)/i,
+  );
+  const assameseNameMatch = text.match(
+    /মোৰ\s+নাম\s+([\u0980-\u09FFa-zA-Z\s]+?)(?:[।.]|\s+মোৰ\s+|$)/,
+  );
 
   if (hindiNameMatch && hindiNameMatch[1].trim()) {
     extracted.full_name = hindiNameMatch[1].trim();
@@ -75,47 +88,84 @@ export function heuristicExtract(
   }
 
   // 5. State / City detection for prominent Indian locations (especially Assam / Northeast & metros)
-  const states = ['Assam', 'असम', 'অসম', 'Delhi', 'दिल्ली', 'Maharashtra', 'महाराष्ट्र', 'West Bengal', 'पश्चिम बंगाल'];
+  const states = [
+    "Assam",
+    "असम",
+    "অসম",
+    "Delhi",
+    "दिल्ली",
+    "Maharashtra",
+    "महाराष्ट्र",
+    "West Bengal",
+    "पश्चिम बंगाल",
+  ];
   for (const st of states) {
     if (text.toLowerCase().includes(st.toLowerCase())) {
-      extracted.state = 'Assam'; // normalized
+      extracted.state = "Assam"; // normalized
       break;
     }
   }
 
-  const cities = ['Guwahati', 'गुवाहाटी', 'গুৱাহাটী', 'Dibrugarh', 'डिब्रूगढ़', 'Jorhat', 'जोरहाट', 'Silchar', 'Nagaon', 'Tezpur'];
+  const cities = [
+    "Guwahati",
+    "गुवाहाटी",
+    "গুৱাহাটী",
+    "Dibrugarh",
+    "डिब्रूगढ़",
+    "Jorhat",
+    "जोरहाट",
+    "Silchar",
+    "Nagaon",
+    "Tezpur",
+  ];
   for (const ct of cities) {
     if (text.toLowerCase().includes(ct.toLowerCase())) {
-      extracted.city = ct.includes('गुवाहाटी') || ct.includes('গুৱাহাটী') ? 'Guwahati' :
-                       ct.includes('डिब्रूगढ़') ? 'Dibrugarh' :
-                       ct.includes('जोरहाट') ? 'Jorhat' : ct;
+      extracted.city =
+        ct.includes("गुवाहाटी") || ct.includes("গুৱাহাটী")
+          ? "Guwahati"
+          : ct.includes("डिब्रूगढ़")
+            ? "Dibrugarh"
+            : ct.includes("जोरहाट")
+              ? "Jorhat"
+              : ct;
       break;
     }
   }
 
   // 6. Address snippet extraction
-  const addressMatch =
-    text.match(/(?:at\s+|रहता हूँ,?\s*|থাকোঁ,?\s*)([\w\d\s,#/-]+(?:Road|Nagar|Ward|Street|House|मकान|नगर|ৰোড|নগৰ)[\w\d\s,#/-]*)/i);
+  const addressMatch = text.match(
+    /(?:at\s+|रहता हूँ,?\s*|থাকোঁ,?\s*)([\w\d\s,#/-]+(?:Road|Nagar|Ward|Street|House|मकान|नगर|ৰোড|নগৰ)[\w\d\s,#/-]*)/i,
+  );
   if (addressMatch) {
     extracted.address = addressMatch[1].trim();
   }
 
   // 7. Preferred language
-  if (text.includes('Hindi') || text.includes('हिन्दी')) {
-    extracted.preferred_language = 'Hindi';
-  } else if (text.includes('Assamese') || text.includes('অসমীয়া')) {
-    extracted.preferred_language = 'Assamese';
-  } else if (text.includes('English') || text.includes('अंग्रेजी')) {
-    extracted.preferred_language = 'English';
+  if (text.includes("Hindi") || text.includes("हिन्दी")) {
+    extracted.preferred_language = "Hindi";
+  } else if (text.includes("Assamese") || text.includes("অসমীয়া")) {
+    extracted.preferred_language = "Assamese";
+  } else if (text.includes("English") || text.includes("अंग्रेजी")) {
+    extracted.preferred_language = "English";
   } else {
     // Default to the language detected in transcript
-    extracted.preferred_language = /[\u0900-\u097F]/.test(text) ? 'Hindi' :
-                                   /[\u0980-\u09FF]/.test(text) ? 'Assamese' : 'English';
+    // Check Assamese/Bengali block (U+0980..U+09FF) first because danda (।) is located in the Devanagari code block (U+0964)
+    extracted.preferred_language = /[\u0980-\u09FF]/.test(text)
+      ? "Assamese"
+      : /[\u0904-\u0939\u0950-\u0963\u0970-\u097F]/.test(text)
+        ? "Hindi"
+        : "English";
   }
 
   // 8. Missing required fields calculation
   const missing_fields = fields
-    .filter((f) => f.required && (extracted[f.id] === undefined || extracted[f.id] === null || extracted[f.id] === ''))
+    .filter(
+      (f) =>
+        f.required &&
+        (extracted[f.id] === undefined ||
+          extracted[f.id] === null ||
+          extracted[f.id] === ""),
+    )
     .map((f) => f.id);
 
   return {
@@ -132,52 +182,52 @@ export function heuristicExtract(
 async function callGeminiApi(
   apiKey: string,
   systemPrompt: string,
-  userPrompt: string
+  userPrompt: string,
 ): Promise<any> {
   const postData = JSON.stringify({
     contents: [
       {
-        role: 'user',
-        parts: [
-          { text: systemPrompt + '\n\n' + userPrompt },
-        ],
+        role: "user",
+        parts: [{ text: systemPrompt + "\n\n" + userPrompt }],
       },
     ],
     generationConfig: {
       temperature: 0.1,
       topP: 0.8,
       maxOutputTokens: 1024,
-      responseMimeType: 'application/json',
+      responseMimeType: "application/json",
     },
   });
 
   return new Promise((resolve, reject) => {
     const url = new URL(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
     );
 
     const req = https.request(
       url,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(postData),
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(postData),
         },
       },
       (res) => {
-        let body = '';
-        res.on('data', (chunk) => {
+        let body = "";
+        res.on("data", (chunk) => {
           body += chunk;
         });
-        res.on('end', () => {
+        res.on("end", () => {
           if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
             try {
               const parsed = JSON.parse(body);
               const textOutput =
                 parsed.candidates?.[0]?.content?.parts?.[0]?.text;
               if (!textOutput) {
-                return reject(new Error('Empty response candidate from Gemini'));
+                return reject(
+                  new Error("Empty response candidate from Gemini"),
+                );
               }
               resolve(JSON.parse(textOutput));
             } catch (err) {
@@ -185,14 +235,14 @@ async function callGeminiApi(
             }
           } else {
             reject(
-              new Error(`Gemini API error (Status ${res.statusCode}): ${body}`)
+              new Error(`Gemini API error (Status ${res.statusCode}): ${body}`),
             );
           }
         });
-      }
+      },
     );
 
-    req.on('error', (err) => {
+    req.on("error", (err) => {
       reject(err);
     });
 
@@ -206,7 +256,7 @@ async function callGeminiApi(
  */
 export async function handleExtract(
   body: ExtractRequestBody,
-  apiKeyFromHeader?: string
+  apiKeyFromHeader?: string,
 ) {
   const { transcript, fields, formType, language } = body;
   const apiKey =
@@ -214,7 +264,7 @@ export async function handleExtract(
     process.env.GEMINI_API_KEY ||
     process.env.VITE_GEMINI_API_KEY;
 
-  if (!apiKey || apiKey.trim() === '' || apiKey === 'YOUR_GEMINI_API_KEY') {
+  if (!apiKey || apiKey.trim() === "" || apiKey === "YOUR_GEMINI_API_KEY") {
     // Return honest fallback
     const heuristic = heuristicExtract(transcript, fields);
     return {
@@ -223,10 +273,10 @@ export async function handleExtract(
       uncertain_fields: heuristic.uncertain_fields,
       missing_fields: heuristic.missing_fields,
       summary: heuristic.summary,
-      model_used: 'Local Heuristic Engine (GEMINI_API_KEY not configured)',
+      model_used: "Local Heuristic Engine (GEMINI_API_KEY not configured)",
       is_fallback: true,
       notice:
-        'Running with local pattern recognition because GEMINI_API_KEY is not set. Add your key in .env or Settings for Google Gemini LLM extraction.',
+        "Running with local pattern recognition because GEMINI_API_KEY is not set. Add your key in .env or Settings for Google Gemini LLM extraction.",
     };
   }
 
@@ -269,12 +319,17 @@ Output STRICT JSON with this schema:
       extracted: geminiOutput.extracted || {},
       uncertain_fields: geminiOutput.uncertain_fields || [],
       missing_fields: geminiOutput.missing_fields || [],
-      summary: geminiOutput.summary || 'Extracted fields successfully with Gemini 1.5 Flash.',
-      model_used: 'Google Gemini 1.5 Flash',
+      summary:
+        geminiOutput.summary ||
+        "Extracted fields successfully with Gemini 1.5 Flash.",
+      model_used: "Google Gemini 1.5 Flash",
       is_fallback: false,
     };
   } catch (err: any) {
-    console.error('Gemini API call failed, falling back to heuristic:', err?.message);
+    console.error(
+      "Gemini API call failed, falling back to heuristic:",
+      err?.message,
+    );
     const heuristic = heuristicExtract(transcript, fields);
     return {
       success: true,
@@ -282,7 +337,7 @@ Output STRICT JSON with this schema:
       uncertain_fields: heuristic.uncertain_fields,
       missing_fields: heuristic.missing_fields,
       summary: heuristic.summary,
-      model_used: 'Local Heuristic Fallback (Gemini API error)',
+      model_used: "Local Heuristic Fallback (Gemini API error)",
       is_fallback: true,
       error: `Gemini API call encountered an error: ${err?.message}. Switched to local heuristic extraction.`,
     };
@@ -305,7 +360,7 @@ export async function handleSubmit(submissionData: any) {
   if (
     supabaseUrl &&
     supabaseKey &&
-    supabaseUrl !== 'https://your-project.supabase.co'
+    supabaseUrl !== "https://your-project.supabase.co"
   ) {
     try {
       // Direct REST insert to Supabase table
@@ -319,19 +374,19 @@ export async function handleSubmit(submissionData: any) {
         city: submissionData.city,
         state: submissionData.state,
         address: submissionData.address || null,
-        preferred_language: submissionData.preferred_language || 'Hindi',
+        preferred_language: submissionData.preferred_language || "Hindi",
         additional_details: submissionData.additional_details || null,
         fields_payload: submissionData.fields_payload || {},
         created_at: now,
       });
 
       const response = await fetch(`${supabaseUrl}/rest/v1/form_submissions`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           apikey: supabaseKey,
           Authorization: `Bearer ${supabaseKey}`,
-          Prefer: 'return=representation',
+          Prefer: "return=representation",
         },
         body: postBody,
       });
@@ -344,15 +399,16 @@ export async function handleSubmit(submissionData: any) {
           reference_id: refId,
           id: saved.id || refId,
           created_at: now,
-          message: 'Application submitted and saved directly to Supabase PostgreSQL database.',
+          message:
+            "Application submitted and saved directly to Supabase PostgreSQL database.",
           is_local_mock: false,
         };
       } else {
         const errText = await response.text();
-        console.warn('Supabase DB insert note:', errText);
+        console.warn("Supabase DB insert note:", errText);
       }
     } catch (err: any) {
-      console.warn('Failed to insert to Supabase:', err?.message);
+      console.warn("Failed to insert to Supabase:", err?.message);
     }
   }
 
@@ -362,7 +418,8 @@ export async function handleSubmit(submissionData: any) {
     reference_id: refId,
     id: `local-${refId}`,
     created_at: now,
-    message: 'Application validated and recorded in session state. (To persist in live Supabase, configure SUPABASE_URL and SUPABASE_ANON_KEY)',
+    message:
+      "Application validated and recorded in session state. (To persist in live Supabase, configure SUPABASE_URL and SUPABASE_ANON_KEY)",
     is_local_mock: true,
   };
 }

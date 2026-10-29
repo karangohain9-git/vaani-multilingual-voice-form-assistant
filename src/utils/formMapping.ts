@@ -61,7 +61,10 @@ export function mergeExtractedFields(
       if (field.id === 'phone' || field.type === 'tel') {
         finalVal = normalizeIndianPhoneNumber(rawVal);
       } else if (field.id === 'age' || field.type === 'number') {
-        const parsed = parseInt(String(rawVal), 10);
+        const rawStr = String(rawVal)
+          .replace(/[০-৯]/g, (d) => String(d.charCodeAt(0) - 0x09e6))
+          .replace(/[०-९]/g, (d) => String(d.charCodeAt(0) - 0x0966));
+        const parsed = parseInt(rawStr, 10);
         finalVal = isNaN(parsed) ? rawVal : parsed;
       }
 
